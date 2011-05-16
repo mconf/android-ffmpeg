@@ -1,5 +1,9 @@
 #!/bin/bash
 
+NDK_DIR=~/codes/android-ndk-r4-crystax
+PREBUILT=$NDK_DIR/build/prebuilt/linux-x86/arm-eabi-4.4.0
+PLATFORM=$NDK_DIR/build/platforms/android-8/arch-arm
+
 list_files() {
 	echo 'LOCAL_SRC_FILES := \' > $1_files.mk
 
@@ -26,10 +30,6 @@ list_files 'libavcodec'
 list_files 'libavformat'
 list_files 'libswscale'
 
-NDK_DIR=~/codes/android-ndk-r4-crystax
-PREBUILT=$NDK_DIR/build/prebuilt/linux-x86/arm-eabi-4.4.0
-PLATFORM=$NDK_DIR/build/platforms/android-8/arch-arm
-
 cd ffmpeg
 ./configure --help > ../configure.options
 ./configure --target-os=linux \
@@ -51,5 +51,5 @@ cd ffmpeg
 	--extra-ldflags="-Wl,-T,$PREBUILT/arm-eabi/lib/ldscripts/armelf.x -Wl,-rpath-link=$PLATFORM/usr/lib -L$PLATFORM/usr/lib -nostdlib $PREBUILT/lib/gcc/arm-eabi/4.4.0/crtbegin.o $PREBUILT/lib/gcc/arm-eabi/4.4.0/crtend.o -lc -lm -ldl" \
 	--logfile=../configure.log
 cd ../..
-ndk-build clean
-ndk-build -j 8
+$NDK_DIR/ndk-build clean
+$NDK_DIR/ndk-build -j 8
