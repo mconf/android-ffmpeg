@@ -5,20 +5,21 @@ list_files() {
 
 	# egrep -i removes the unnecessary source files
 	find ffmpeg -name '*.c' -or -name '*.S' | egrep -i "$1/" | \
-\
-egrep -i 'test|template|_iwmmxt|_neon|_armv6|_vfp|avisynth.c|crystalhd.c|g729dec.c|tablegen.c|example|ac3enc_|fft_float.c|mdct_float.c|dxva2|alpha/|bfin/|mlib/|ppc/|ps2/|sh4/|sparc/|x86/' --invert-match | \
-# depends on external library
-egrep -i 'libcelt|libdirac|libfaac|libgsm|libmp3lame|libschroedinger|libopenjpeg|libspeex|libtheora|libvo-amrwb|libvo-aac|libxvid|libx264|libvorbis|libvpx|libxavs|libnut.c|librtmp.c|mpegvideo_xvmc|vaapi|vdpau|w32thread' --invert-match | \
-# depends on CONFIG_NETWORK
-egrep -i 'gopher.c|http.c|mmst.c|rtmp|rtp|rtsp|rdt|sapdec.c|sapenc.c|tcp|udp|mmsh.c' --invert-match | \
-# depends on CONFIG_MUXERS
-egrep -i 'asfdec.c|avidec.c|avienc.c|dxa.c|matroskadec.c|movenchint.c|nuv.c|wtvdec.c|xwma.c|movenc.c' --invert-match | \
-
-\
-sort | sed 's/ffmpeg\///' | sed 's/\.c/.c \\/' | sed 's/\.S/.S \\/' >> $1_files.mk
-# sed 's/ffmpeg\///' removes 'ffmpeg' from the file path
-# avisynth.c - includes windows.h
+	# remove some architecture files, examples, table generators and stuff
+	egrep -i 'test|template|_iwmmxt|_neon|_armv6|_vfp|avisynth.c|crystalhd.c|g729dec.c|tablegen.c|example|ac3enc_|fft_float.c|mdct_float.c|dxva2|alpha/|bfin/|mlib/|ppc/|ps2/|sh4/|sparc/|x86/' --invert-match | \
+	# depends on external library
+	egrep -i 'libcelt|libdirac|libfaac|libgsm|libmp3lame|libschroedinger|libopenjpeg|libspeex|libtheora|libvo-amrwb|libvo-aac|libxvid|libx264|libvorbis|libvpx|libxavs|libnut.c|librtmp.c|mpegvideo_xvmc|vaapi|vdpau|w32thread' --invert-match | \
+	# depends on CONFIG_NETWORK
+	egrep -i 'gopher.c|http.c|mmst.c|rtmp|rtp|rtsp|rdt|sapdec.c|sapenc.c|tcp|udp|mmsh.c' --invert-match | \
+	# depends on CONFIG_MUXERS
+	egrep -i 'asfdec.c|avidec.c|avienc.c|dxa.c|matroskadec.c|movenchint.c|nuv.c|wtvdec.c|xwma.c|movenc.c' --invert-match | \
+	# sort and format file names
+	sort | sed 's/ffmpeg\///' | sed 's/\.c/.c \\/' | sed 's/\.S/.S \\/' >> $1_files.mk
+	# sed 's/ffmpeg\///' removes 'ffmpeg' from the file path
+	# avisynth.c - includes windows.h
 }
+
+cd jni
 
 list_files 'libavutil'
 list_files 'libavcodec'
@@ -28,8 +29,6 @@ list_files 'libswscale'
 NDK_DIR=~/codes/android-ndk-r4-crystax
 PREBUILT=$NDK_DIR/build/prebuilt/linux-x86/arm-eabi-4.4.0
 PLATFORM=$NDK_DIR/build/platforms/android-8/arch-arm
-
-#return
 
 cd ffmpeg
 ./configure --help > ../configure.options
@@ -51,4 +50,6 @@ cd ffmpeg
 	--enable-armv5te \
 	--extra-ldflags="-Wl,-T,$PREBUILT/arm-eabi/lib/ldscripts/armelf.x -Wl,-rpath-link=$PLATFORM/usr/lib -L$PLATFORM/usr/lib -nostdlib $PREBUILT/lib/gcc/arm-eabi/4.4.0/crtbegin.o $PREBUILT/lib/gcc/arm-eabi/4.4.0/crtend.o -lc -lm -ldl" \
 	--logfile=../configure.log
-cd ..
+cd ../..
+ndk-build clean
+ndk-build -j 8
