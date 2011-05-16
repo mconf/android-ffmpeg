@@ -1,0 +1,1 @@
+APP_MODULES := avcodec avutil avformat swscale
