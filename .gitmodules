@@ -1,0 +1,3 @@
+[submodule "jni/ffmpeg"]
+	path = jni/ffmpeg
+	url = git@github.com:mconf/ffmpeg.git
