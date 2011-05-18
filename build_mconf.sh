@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # using the unofficial Crystax NDK
-NDK_DIR=~/Codes/android-ndk-r4-crystax
+NDK_DIR=~/codes/android-ndk-r4-crystax
 PREBUILT=$NDK_DIR/build/prebuilt/linux-x86/arm-eabi-4.4.0
 PLATFORM=$NDK_DIR/build/platforms/android-8/arch-arm
 
@@ -24,35 +24,34 @@ PLATFORM=$NDK_DIR/build/platforms/android-8/arch-arm
 list_files() {
 	echo 'LOCAL_SRC_FILES := \' > ../$1_files.mk
 
-    # run a fake make
-    make --dry-run | \
-    # select all the lines of make output that contains .c and .S files
-    egrep -i '\.c|\.S' | \
-    # select just the filenames followed by ' \'
-    sed -e 's:\(.*\) \(.*\.[cS]\)\(.*\):\2 \\:g' | \
-    # select the just the files from the wanted library
-    egrep -i "$1/" | \
-    # put the result on .mk file
-    sort >> ../$1_files.mk
+	# run a fake make
+	make --dry-run | \
+	# select the just the files from the wanted library
+	egrep -i "$1/" | \
+	# select all the occurrences of .c and .S filenames
+	grep "[^ ]*\.[cS]" -o | \
+	# put a \ at the end of each line
+	sed -e 's:$: \\:g' | \
+	# put the result on .mk file
+	sort >> ../$1_files.mk
 }
 
 cd jni/ffmpeg
 
-./configure --help > ../configure.options
 ./configure --target-os=linux \
-    --disable-everything \
-    --disable-postproc \
-    --disable-avfilter \
-    --disable-network \
-    --disable-ffmpeg \
-    --disable-ffprobe \
+	--disable-everything \
+	--disable-postproc \
+	--disable-avfilter \
+	--disable-network \
+	--disable-ffmpeg \
+	--disable-ffprobe \
 	--arch=arm \
 	--enable-version3 \
 	--enable-gpl \
 	--enable-nonfree \
 	--enable-cross-compile \
-    --enable-encoder=flv \
-    --enable-decoder=flv \
+	--enable-encoder=flv \
+	--enable-decoder=flv \
 	--cc=$PREBUILT/bin/arm-eabi-gcc \
 	--cross-prefix=$PREBUILT/bin/arm-eabi- \
 	--nm=$PREBUILT/bin/arm-eabi-nm \
@@ -71,4 +70,4 @@ list_files 'libswscale'
 cd ../..
 
 $NDK_DIR/ndk-build clean
-$NDK_DIR/ndk-build -j 4
+$NDK_DIR/ndk-build -j 8

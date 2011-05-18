@@ -56,8 +56,6 @@ cd jni/ffmpeg
 
 list_files 'libavutil'
 list_files 'libavcodec'
-# point corrections
-#echo 'libavcodec/rawdec.c \' >> ../libavcodec_files.mk
 list_files 'libavformat'
 list_files 'libswscale'
 
