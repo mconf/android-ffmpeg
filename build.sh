@@ -22,30 +22,26 @@ PLATFORM=$NDK_DIR/build/platforms/android-8/arch-arm
 #cp $PLATFORM/../../android-3/arch-arm/usr/include/linux/in6.h $PLATFORM/usr/include/linux/
 
 list_files() {
-	echo 'LOCAL_SRC_FILES := \' > $1_files.mk
+	echo 'LOCAL_SRC_FILES := \' > ../$1_files.mk
 
-	# egrep -i removes the unnecessary source files
-	find ffmpeg -name '*.c' -or -name '*.S' | egrep -i "$1/" | \
-	# remove some architecture files, examples, table generators and stuff
-	egrep -i '\-test.c|template|_iwmmxt|_neon|_armv6|_vfp|avisynth.c|crystalhd.c|g729dec.c|tablegen.c|example|fft_float.c|mdct_float.c|dxva2|alpha/|bfin/|mlib/|ppc/|ps2/|sh4/|sparc/|x86/' --invert-match | \
-	# depends on external library
-	egrep -i 'libcelt|libdirac|libfaac|libgsm|libmp3lame|libschroedinger|libopenjpeg|libspeex|libtheora|libvo-amrwb|libvo-aac|libxvid|libx264|libvorbis|libvpx|libxavs|libnut.c|librtmp.c|mpegvideo_xvmc|vaapi|vdpau|w32thread' --invert-match | \
-	# sort and format file names
-	sort | sed 's/ffmpeg\///' | sed 's/\.c/.c \\/' | sed 's/\.S/.S \\/' >> $1_files.mk
-	# sed 's/ffmpeg\///' removes 'ffmpeg' from the file path
-	# avisynth.c - includes windows.h
+    # run a fake make
+    make --dry-run | \
+    # select all the lines of make output that contains .c and .S files
+    egrep -i '\.c|\.S' | \
+    # select just the filenames followed by ' \'
+    sed -e 's:\(.*\) \(.*\.[cS]\)\(.*\):\2 \\:g' | \
+    # select the just the files from the wanted library
+    egrep -i "$1/" | \
+    # put the result on .mk file
+    sort >> ../$1_files.mk
 }
 
-cd jni
+cd jni/ffmpeg
 
-list_files 'libavutil'
-list_files 'libavcodec'
-list_files 'libavformat'
-list_files 'libswscale'
-
-cd ffmpeg
 ./configure --help > ../configure.options
 ./configure --target-os=linux \
+    --disable-ffmpeg \
+    --disable-ffprobe \
 	--arch=arm \
 	--enable-version3 \
 	--enable-gpl \
@@ -58,6 +54,14 @@ cd ffmpeg
 	--enable-armv5te \
 	--extra-ldflags="-Wl,-T,$PREBUILT/arm-eabi/lib/ldscripts/armelf.x -Wl,-rpath-link=$PLATFORM/usr/lib -L$PLATFORM/usr/lib -nostdlib $PREBUILT/lib/gcc/arm-eabi/4.4.0/crtbegin.o $PREBUILT/lib/gcc/arm-eabi/4.4.0/crtend.o -lc -lm -ldl" \
 	--logfile=../configure.log
+
+list_files 'libavutil'
+list_files 'libavcodec'
+# point corrections
+#echo 'libavcodec/rawdec.c \' >> ../libavcodec_files.mk
+list_files 'libavformat'
+list_files 'libswscale'
+
 cd ../..
 
 $NDK_DIR/ndk-build clean
