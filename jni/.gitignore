@@ -1,3 +1,4 @@
 *_files.mk
 *.log
 *.options
+built_headers/
